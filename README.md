@@ -40,6 +40,7 @@ uv run dendrobium-succ run \
 | `embed` | Embed fragments with ProtT5-XL on Modal GPU |
 | `predict` | Run RLSuccSite ensemble prediction (CPU, local) |
 | `run` | Full pipeline: fetch → extract → embed → predict |
+| `evaluate` | Score predictions against wet-lab ground truth (F1, MCC, AUC) |
 
 ```bash
 # Individual steps

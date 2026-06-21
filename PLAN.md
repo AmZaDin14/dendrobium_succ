@@ -59,24 +59,15 @@ automated and traceable via git conventional commits.
 | git | ≥ 2.40 | system package manager |
 | modal | ≥ 0.64 | `pip install modal` or `uv tool install modal` |
 
-### 2. RLSuccSite (sibling directory)
+### 2. RLSuccSite models (bundled)
 
-RLSuccSite must be cloned at `../RLSuccSite` (relative to this project)
-with its virtual environment already configured:
-
-```bash
-cd /home/amri/Code/python
-git clone <rlsuccsite-repo> RLSuccSite    # or it's already there
-cd RLSuccSite
-uv sync                                   # creates .venv with torch, torchrl, etc.
-```
-
-Verify:
-```bash
-ls RLSuccSite/.venv/bin/python            # must exist
-ls RLSuccSite/Models/*.pth                # 2 model checkpoints
-ls RLSuccSite/Models/*.pkl                # 2 scalers
-```
+The model weights are bundled in `models/rlsuccsite/`. No sibling
+repository is required. The predict step can use the local models
+directly; see `src/dendrobium_succ/predict.py` for the resolution
+logic. The predict step *does* need a Python interpreter with
+`torch`, `torchrl`, `tensordict`, and `protlearn` installed — this
+is typically provided by the sibling `../RLSuccSite/.venv` (if
+present), falling back to the local `.venv`.
 
 ### 3. Modal account
 
@@ -208,8 +199,8 @@ uv run dendrobium-succ embed \
 **Output:** `data/processed/features.pt`
 
 ```python
-# Verify locally (using RLSuccSite's venv):
-../RLSuccSite/.venv/bin/python -c "
+# Verify locally (using the local venv):
+uv run python -c "
 import torch
 d = torch.load('data/processed/features.pt', map_location='cpu')
 print(d['features'].shape)  # should be [N, 1024]
@@ -327,16 +318,25 @@ modal run modal/prott5_embed.py::download_model
 ```
 The Volume is incremental — partial downloads resume.
 
-### Predict.py fails with `ModuleNotFoundError`
-RLSuccSite's `.venv` may be missing dependencies:
+### Predict.py fails with `ModuleNotFoundError: No module named 'torchrl'`
+The local venv is missing RLSuccSite's heavy deps (torch, torchrl,
+tensordict, protlearn). Two options:
 ```bash
-cd ../RLSuccSite && uv sync
+# Option A: use the sibling RLSuccSite venv (if you have it)
+# predict.py auto-detects ../RLSuccSite/.venv
+
+# Option B: install deps into the local venv
+uv pip install torch torchrl tensordict protlearn
 ```
 
 ### Predict.py fails with `FileNotFoundError: scaler_*.pkl`
-The scalers must be in `RLSuccSite/Models/`. If missing, Predict.py will
-try to fit them from training data (which may not be present). Ensure
-the pre-trained scalers are in place.
+The scalers ship in `models/rlsuccsite/Models/`. If missing, Predict.py
+will try to fit them from training data (which may not be present).
+Verify the bundled models are intact:
+```bash
+ls models/rlsuccsite/Models/*.pkl
+ls models/rlsuccsite/Models/*.pth
+```
 
 ### Fragment count is zero
 Your input FASTA may be DNA, not protein. The extractor skips sequences
@@ -370,24 +370,36 @@ For 100k fragments: ~$0.30. For 1M fragments: ~$3.00.
 
 ```
 dendrobium_succ/
-├── pyproject.toml                    # uv project (biopython, modal, typer, rich)
-├── PLAN.md                           # this file
-├── README.md                         # quick-start
+├── pyproject.toml                    # uv project (deps: biopython, modal, typer, rich, sklearn, matplotlib, numpy)
+├── PLAN.md                           # this file — reproduction recipe
+├── README.md                         # landing page + quick-start
+├── docs/                             # detailed documentation
+│   ├── architecture.md               # system design + design decisions
+│   └── cli-reference.md              # all CLI commands
 ├── src/dendrobium_succ/
 │   ├── __init__.py
-│   ├── cli.py                        # Typer CLI: fetch, extract, embed, predict, run
-│   ├── fetch.py                      # Step 1: NCBI Datasets API protein FASTA download
-│   ├── extract.py                    # Step 2: fragment extraction
+│   ├── cli.py                        # Typer CLI: 7 commands
+│   ├── logging_config.py             # rich console + JSON file logger
+│   ├── fetch.py                      # Step 1: NCBI Datasets v2 API
+│   ├── extract.py                    # Step 2: 33-mer fragment extraction
 │   ├── embed.py                      # Step 3: Modal client wrapper
 │   ├── predict.py                    # Step 4: RLSuccSite Predict.py wrapper
+│   ├── evaluate.py                   # Step 5: wet-lab evaluation (F1, MCC, AUC)
 │   └── pipeline.py                   # Full pipeline orchestration
 ├── modal/
 │   └── prott5_embed.py               # Modal GPU app (ProtT5-XL embedding)
+├── models/
+│   └── rlsuccsite/                   # bundled RLSuccSite models (Feature/, Models/)
 ├── data/
-│   ├── input/                        # your protein FASTAs
-│   └── processed/                    # fragments, features, predictions
+│   ├── input/                        # your protein FASTAs (gitignored)
+│   ├── processed/                    # fragments, features, predictions (gitignored)
+│   └── wetlab/                       # Feng et al. 2017 test sites + reference proteome
+│       ├── test.csv                  # 314 wet-lab succinylation sites
+│       ├── test_fixture.csv          # 3-row fixture for unit tests
+│       ├── protein.faa               # 19 MB RefSeq proteome (ground truth)
+│       └── mini/                     # 1000-fragment mini dataset for demo.sh
 ├── tests/
 │   └── test_extract.py               # fragment extraction tests
 └── scripts/
-    └── demo.sh                       # end-to-end demo with mini dataset
+    └── demo.sh                       # end-to-end demo with shipped mini dataset
 ```
