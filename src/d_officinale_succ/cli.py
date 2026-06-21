@@ -21,6 +21,7 @@ import typer
 from rich.console import Console
 
 from .embed import download_model, embed_fragments
+from .evaluate import run_full_evaluation
 from .extract import extract_fragments
 from .fetch import fetch as fetch_fasta
 from .logging_config import setup_logging
@@ -148,6 +149,34 @@ def run(
         skip_model_download=skip_model_download,
         batch_size=batch_size,
         num_workers=num_workers,
+    )
+
+
+@app.command()
+def evaluate(
+    predictions_csv: Path = typer.Option(..., "--predictions-csv", "-p", help="Predictions CSV from predict step"),
+    test_csv: Path = typer.Option("data/wetlab/test.csv", "--test-csv", help="Wet-lab test sites CSV"),
+    output_dir: Path = typer.Option("data/wetlab/results", "--output-dir", "-o", help="Output directory"),
+    protein_fasta: Path = typer.Option("data/wetlab/protein.faa", "--protein-fasta", help="RefSeq proteome (for negatives)"),
+    seed: int = typer.Option(42, "--seed", help="Random seed for negative sampling"),
+):
+    """Evaluate predictions against wet-lab ground truth.
+
+    Computes recall on Feng et al. 2017 wet-lab succinylation sites, plus
+    precision, F1, MCC, AUC-ROC, AUC-PR using 1:1 same-protein synthetic
+    negatives (matches RLSuccSite-NegCtrl policy).
+
+    Outputs:
+        output_dir/matches.csv     — per-site predictions vs ground truth
+        output_dir/metrics.json    — aggregate metrics
+        output_dir/pr_curve.png    — precision-recall curve
+    """
+    run_full_evaluation(
+        predictions_csv=predictions_csv,
+        test_csv=test_csv,
+        protein_fasta=protein_fasta,
+        output_dir=output_dir,
+        seed=seed,
     )
 
 
