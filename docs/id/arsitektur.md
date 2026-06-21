@@ -274,7 +274,7 @@ banyak modul nanti, kami dapat membagi kemudian.
 
 **19. Mengapa Typer untuk CLI?**
 Typer dibangun di atas Click, memiliki *parsing* argumen berbasis *type
-hint*, menghasilkan `--help` secara otomatis, dan渲染 dengan baik bersama
+hint*, menghasilkan `--help` secara otomatis, dan dirender dengan baik bersama
 rich. Ini lebih sedikit *boilerplate* daripada argparse, lebih modern
 daripada Click. CLI 7-perintah cocok dengan *sweet spot* Typer.
 

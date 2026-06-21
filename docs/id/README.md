@@ -55,7 +55,7 @@ uv run dendrobium-succ run \
 ProtT5-XL adalah transformer dengan 3 miliar parameter (~2.8 GB) — terlalu
 besar untuk dijalankan pada CPU dalam skala besar, sehingga hanya tahap
 embedding yang menggunakan GPU. Semua tahap lainnya berjalan secara lokal.
-Lihat [arsitektur](architecture.md) untuk rationale desain lengkap.
+Lihat [arsitektur](arsitektur.md) untuk rationale desain lengkap.
 
 ## Evaluasi
 
@@ -87,13 +87,13 @@ protein yang sama, untuk perhitungan presisi/F1/MCC yang adil.
 | `run` | Pipeline lengkap: fetch → extract → embed → predict |
 | `evaluate` | Menilai prediksi terhadap *ground truth* wet-lab (F1, MCC, AUC) |
 
-Lihat [referensi CLI](cli-reference.md) untuk detail lengkap setiap flag.
+Lihat [referensi CLI](referensi-cli.md) untuk detail lengkap setiap flag.
 
 ## Prasyarat
 
 - **uv** — [instal](https://docs.astral.sh/uv/getting-started/installation/)
 - **modal** — `uv tool install modal && modal setup`
-- **Lingkungan Python dengan `torch`, `torchrl`, `tensordict`, `protlearn`** untuk tahap prediksi. Alat ini mendeteksi otomatis `../RLSuccSite/.venv` jika ada, jika tidak maka menggunakan `.venv` lokal. Lihat [arsitektur](architecture.md#keputusan-desain) untuk rationale-nya.
+- **Lingkungan Python dengan `torch`, `torchrl`, `tensordict`, `protlearn`** untuk tahap prediksi. Alat ini mendeteksi otomatis `../RLSuccSite/.venv` jika ada, jika tidak maka menggunakan `.venv` lokal. Lihat [arsitektur](arsitektur.md#keputusan-desain) untuk rationale-nya.
 
 Bobot model sudah disertakan dalam `models/rlsuccsite/`. Tidak memerlukan
 repositori RLSuccSite terpisah.
