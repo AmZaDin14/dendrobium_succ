@@ -9,8 +9,8 @@ conventional commits*.
 
 **Dokumen terkait:**
 - [README.md](../../README.md) — mulai cepat + halaman arahan
-- [docs/id/arsitektur.md](../arsitektur.md) — desain sistem + 24 keputusan desain (the "why")
-- [docs/id/referensi-cli.md](../referensi-cli.md) — referensi lengkap perintah CLI
+- [arsitektur.md](arsitektur.md) — desain sistem + 24 keputusan desain (the "why")
+- [referensi-cli.md](referensi-cli.md) — referensi lengkap perintah CLI
 
 ---
 
@@ -63,7 +63,7 @@ conventional commits*.
 dengan 3 miliar parameter (~2.8 GB). Pada CPU, *embedding* 1000 fragmen
 memakan waktu ~30 menit; pada GPU L40S, ~30 detik. Langkah 0, 1, 3, dan 4
 adalah operasi CPU/HTTP yang ringan. Lihat
-[docs/id/arsitektur.md](../arsitektur.md) untuk rationale desain lengkap.
+[arsitektur.md](arsitektur.md) untuk rationale desain lengkap.
 
 ---
 
@@ -322,7 +322,7 @@ uv run dendrobium-succ evaluate \
 - MCC: ~0.29
 
 Untuk detail flag lengkap, lihat
-[docs/id/referensi-cli.md](../referensi-cli.md#evaluate).
+[referensi-cli.md](referensi-cli.md#evaluate).
 
 ---
 

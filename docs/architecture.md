@@ -1,5 +1,7 @@
 # Architecture
 
+> 🌐 **Language:** **English** | [Bahasa Indonesia](id/arsitektur.md)
+
 This document describes how `dendrobium_succ` is put together and *why* each
 piece exists. For a step-by-step reproduction recipe, see [PLAN.md](../PLAN.md).
 For command-line details, see [cli-reference.md](cli-reference.md).

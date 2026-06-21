@@ -1,5 +1,7 @@
 # dendrobium_succ
 
+> 🌐 **Language:** **English** | [Bahasa Indonesia](docs/id/README.md)
+
 Reproducible succinylation site prediction for *Dendrobium officinale*
 (orchid) using [RLSuccSite](https://github.com/Zhangqingchao-Ch/RLSuccSite) — a
 reinforcement learning-based succinyllysine site predictor. This harness wraps

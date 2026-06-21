@@ -1,5 +1,7 @@
 # Reproducible Plan: Succinylation Site Prediction for *Dendrobium officinale*
 
+> 🌐 **Language:** **English** | [Bahasa Indonesia](docs/id/PLAN.md)
+
 This document is a step-by-step, reproducible recipe for running RLSuccSite
 inference on a new protein dataset using this harness. Every step is
 automated and traceable via git conventional commits.

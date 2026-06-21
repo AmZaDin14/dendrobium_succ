@@ -1,5 +1,7 @@
 # CLI Reference
 
+> 🌐 **Language:** **English** | [Bahasa Indonesia](id/referensi-cli.md)
+
 Complete reference for all `dendrobium-succ` commands. For the design rationale
 behind these commands, see [architecture.md](architecture.md). For a
 reproduction recipe, see [PLAN.md](../PLAN.md).
