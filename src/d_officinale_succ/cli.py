@@ -9,6 +9,10 @@ Usage:
     d-officinale-succ predict --prott5-pt features.pt --fragments-fasta fragments.fasta --output-csv preds.csv
     d-officinale-succ run --accession GCF_001605985.2 --output-csv preds.csv
     d-officinale-succ run --input-fasta proteins.faa --output-csv preds.csv
+
+Logging:
+    All commands support --log-level (DEBUG/INFO/WARNING/ERROR) and --log-file.
+    Default: INFO level, logs written to data/processed/run.log (JSON format).
 """
 
 from pathlib import Path
@@ -19,6 +23,7 @@ from rich.console import Console
 from .embed import download_model, embed_fragments
 from .extract import extract_fragments
 from .fetch import fetch as fetch_fasta
+from .logging_config import setup_logging
 from .pipeline import run_pipeline
 from .predict import run_predict
 
@@ -28,6 +33,24 @@ app = typer.Typer(
     help="Reproducible succinylation site prediction for Daucus officinale using RLSuccSite.",
     no_args_is_help=True,
 )
+
+
+@app.callback()
+def main_callback(
+    log_level: str = typer.Option(
+        "INFO",
+        "--log-level",
+        help="Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL",
+        case_sensitive=False,
+    ),
+    log_file: Path | None = typer.Option(
+        "data/processed/run.log",
+        "--log-file",
+        help="Path to JSON log file (default: data/processed/run.log)",
+    ),
+):
+    """Configure logging for all commands."""
+    setup_logging(level=log_level, log_file=log_file)
 
 
 @app.command()

@@ -18,9 +18,9 @@ Output CSV columns: SequenceID, Sequence, PositiveProbability, PredictedLabel
 import subprocess
 from pathlib import Path
 
-from rich.console import Console
+from .logging_config import get_logger
 
-console = Console()
+logger = get_logger(__name__)
 
 # RLSuccSite is a sibling directory: ../RLSuccSite
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -82,11 +82,11 @@ def run_predict(
         "--batch_size", str(batch_size),
     ]
 
-    console.print(f"[cyan]Running RLSuccSite ensemble prediction...[/cyan]")
-    console.print(f"  ProtT5:   {prott5_pt}")
-    console.print(f"  Fragments: {fragments_fasta}")
-    console.print(f"  Output:   {output_csv}")
-    console.print(f"  [dim]$ {' '.join(cmd)}[/dim]")
+    logger.info("Running RLSuccSite ensemble prediction...")
+    logger.info(f"  ProtT5:   {prott5_pt}")
+    logger.info(f"  Fragments: {fragments_fasta}")
+    logger.info(f"  Output:   {output_csv}")
+    logger.debug(f"$ {' '.join(cmd)}")
 
     # Run from RLSuccSite dir so its relative imports (Feature.*, Models.*) work
     subprocess.run(cmd, check=True, cwd=str(base))
@@ -105,8 +105,8 @@ def run_predict(
             if row["PredictedLabel"] == "1":
                 positives += 1
 
-    console.print(
-        f"[green]✓ Predictions saved[/green] → {output_csv}  "
-        f"({total} sites, {positives} positive)"
+    logger.info(
+        f"Predictions saved → {output_csv} ({total} sites, {positives} positive)",
+        extra={"output_path": output_csv, "count": total, "positives": positives},
     )
     return output_csv

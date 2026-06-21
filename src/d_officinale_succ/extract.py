@@ -13,9 +13,10 @@ The center residue (index 16, 0-based) of each fragment is the lysine of interes
 from pathlib import Path
 
 from Bio import SeqIO
-from rich.console import Console
 
-console = Console()
+from .logging_config import get_logger
+
+logger = get_logger(__name__)
 
 WINDOW_SIZE = 33
 
@@ -50,9 +51,8 @@ def extract_fragments(
 
             # Skip sequences that look like DNA
             if len(seq) > 100 and all(c in "ATGCN" for c in seq[:100]):
-                console.print(
-                    f"[yellow]Warning:[/yellow] {record.id} looks like DNA — "
-                    "skipping (model requires protein sequences)."
+                logger.warning(
+                    f"{record.id} looks like DNA — skipping (model requires protein sequences)"
                 )
                 continue
 
@@ -74,5 +74,8 @@ def extract_fragments(
                 out.write(f">{record.id}|pos_{i + 1}\n{fragment}\n")
                 count += 1
 
-    console.print(f"[green]Extracted {count} lysine (K) sites[/green] → {output_fasta}")
+    logger.info(
+        f"Extracted {count} lysine (K) sites → {output_fasta}",
+        extra={"output_path": output_fasta, "count": count},
+    )
     return count

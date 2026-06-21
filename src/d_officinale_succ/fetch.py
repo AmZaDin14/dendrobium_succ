@@ -27,9 +27,9 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from rich.console import Console
+from .logging_config import get_logger
 
-console = Console()
+logger = get_logger(__name__)
 
 BASE_URL = "https://api.ncbi.nlm.nih.gov/datasets/v2"
 
@@ -85,7 +85,7 @@ def search_assemblies(
     }
     url = _build_url(f"/genome/taxon/{taxon}/dataset_report", params)
 
-    console.print(f"[dim]GET {url}[/dim]")
+    logger.debug(f"GET {url}")
 
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     try:
@@ -140,8 +140,8 @@ def download_protein_fasta(
     params = {"include_annotation_type": "PROT_FASTA"}
     url = _build_url(f"/genome/accession/{accession}/download", params)
 
-    console.print(f"[cyan]Downloading protein FASTA for {accession}...[/cyan]")
-    console.print(f"[dim]GET {url}[/dim]")
+    logger.info(f"Downloading protein FASTA for {accession}...")
+    logger.debug(f"GET {url}")
 
     req = urllib.request.Request(url)
     try:
@@ -170,7 +170,7 @@ def download_protein_fasta(
                 f"protein.faa not found in ZIP. Available files:\n  {available}"
             )
 
-        console.print(f"[dim]Extracting {target} from ZIP...[/dim]")
+        logger.debug(f"Extracting {target} from ZIP...")
         protein_bytes = zf.read(target)
 
     output_fasta.write_bytes(protein_bytes)
@@ -179,9 +179,9 @@ def download_protein_fasta(
     # Count proteins
     n_proteins = sum(1 for line in output_fasta.read_text().splitlines() if line.startswith(">"))
 
-    console.print(
-        f"[green]✓ Downloaded[/green] {output_fasta}  "
-        f"({size_mb:.1f} MB, {n_proteins} proteins)"
+    logger.info(
+        f"Downloaded {output_fasta} ({size_mb:.1f} MB, {n_proteins} proteins)",
+        extra={"output_path": output_fasta, "size_mb": size_mb, "count": n_proteins},
     )
     return output_fasta
 
@@ -214,17 +214,17 @@ def fetch(
 
     # Search by organism (guaranteed non-None by validation above)
     assert organism is not None
-    console.print(f"[cyan]Searching NCBI for assemblies of '{organism}'...[/cyan]")
+    logger.info(f"Searching NCBI for assemblies of '{organism}'...")
     results = search_assemblies(organism)
 
-    console.print(f"[green]Found {len(results)} assembly(ies):[/green]")
+    logger.info(f"Found {len(results)} assembly(ies)")
     for i, r in enumerate(results):
-        console.print(
+        logger.info(
             f"  [{i}] {r['current_accession']}  "
             f"{r['organism_name']}  "
             f"({r['assembly_level']}, {r['assembly_name']})"
         )
 
     first = results[0]
-    console.print(f"\n[cyan]Downloading first result: {first['current_accession']}[/cyan]")
+    logger.info(f"Downloading first result: {first['current_accession']}")
     return download_protein_fasta(first["current_accession"], output_fasta)

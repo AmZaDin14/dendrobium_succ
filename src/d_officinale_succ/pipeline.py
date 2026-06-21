@@ -15,9 +15,11 @@ from rich.table import Table
 from .embed import download_model, embed_fragments
 from .extract import extract_fragments
 from .fetch import fetch as fetch_fasta
+from .logging_config import get_logger
 from .predict import run_predict
 
-console = Console()
+logger = get_logger(__name__)
+console = Console()  # Keep for rich table rendering
 
 
 def run_pipeline(
@@ -61,12 +63,12 @@ def run_pipeline(
 
     # ── Step 0a: One-time model download ────────────────────────────
     if not skip_model_download:
-        console.rule("[bold cyan]Step 0: Download ProtT5-XL to Modal Volume[/bold cyan]")
+        logger.info("Step 0: Download ProtT5-XL to Modal Volume")
         download_model()
 
     # ── Step 0b: Fetch protein FASTA from NCBI (if needed) ──────────
     if input_fasta is None:
-        console.rule("[bold cyan]Step 1: Fetch protein FASTA from NCBI[/bold cyan]")
+        logger.info("Step 1: Fetch protein FASTA from NCBI")
         input_fasta = work_dir / "proteins.faa"
         fetch_fasta(
             organism=organism,
@@ -77,19 +79,19 @@ def run_pipeline(
         input_fasta = Path(input_fasta)
 
     # ── Step 2: Extract fragments ───────────────────────────────────
-    console.rule("[bold cyan]Step 2: Extract 33-mer fragments around each K[/bold cyan]")
+    logger.info("Step 2: Extract 33-mer fragments around each K")
     n_fragments = extract_fragments(input_fasta, fragments_fasta)
 
     if n_fragments == 0:
-        console.print("[yellow]No lysine (K) sites found. Nothing to predict.[/yellow]")
+        logger.warning("No lysine (K) sites found. Nothing to predict.")
         return output_csv
 
     # ── Step 3: ProtT5 embedding (Modal GPU) ────────────────────────
-    console.rule("[bold cyan]Step 3: ProtT5-XL embedding (Modal GPU)[/bold cyan]")
+    logger.info("Step 3: ProtT5-XL embedding (Modal GPU)")
     embed_fragments(fragments_fasta, features_pt, batch_size=batch_size)
 
     # ── Step 4: RLSuccSite ensemble prediction ──────────────────────
-    console.rule("[bold cyan]Step 4: RLSuccSite ensemble prediction[/bold cyan]")
+    logger.info("Step 4: RLSuccSite ensemble prediction")
     run_predict(
         prott5_pt=features_pt,
         fragments_fasta=fragments_fasta,
@@ -98,7 +100,7 @@ def run_pipeline(
     )
 
     # ── Summary ─────────────────────────────────────────────────────
-    console.rule("[bold green]Pipeline complete[/bold green]")
+    logger.info("Pipeline complete")
 
     table = Table(title="Pipeline Summary")
     table.add_column("Step", style="cyan")
@@ -108,6 +110,12 @@ def run_pipeline(
     table.add_row("Fragments", str(fragments_fasta), f"{n_fragments} sites")
     table.add_row("ProtT5 features", str(features_pt), f"{features_pt.stat().st_size / (1024*1024):.1f} MB")
     table.add_row("Predictions", str(output_csv), f"{output_csv.stat().st_size / 1024:.0f} KB")
+    
+    # Render table to string for logging
+    from io import StringIO
+    string_io = StringIO()
+    console = Console(file=string_io, force_terminal=False)
     console.print(table)
+    logger.info(string_io.getvalue())
 
     return output_csv

@@ -10,9 +10,9 @@ Provides a clean Python function that:
 import subprocess
 from pathlib import Path
 
-from rich.console import Console
+from .logging_config import get_logger
 
-console = Console()
+logger = get_logger(__name__)
 
 # Path to the Modal app (relative to project root)
 MODAL_APP = "modal/prott5_embed.py"
@@ -43,9 +43,9 @@ def embed_fragments(
     if not fragments_fasta.exists():
         raise FileNotFoundError(f"Fragments FASTA not found: {fragments_fasta}")
 
-    console.print(f"[cyan]Embedding fragments with ProtT5 on Modal GPU...[/cyan]")
-    console.print(f"  Input:  {fragments_fasta}")
-    console.print(f"  Output: {output_pt}")
+    logger.info("Embedding fragments with ProtT5 on Modal GPU...")
+    logger.info(f"  Input:  {fragments_fasta}")
+    logger.info(f"  Output: {output_pt}")
 
     # Step 1: Run embedding on Modal
     cmd = [
@@ -54,7 +54,7 @@ def embed_fragments(
         "--output-name", output_name,
         "--batch-size", str(batch_size),
     ]
-    console.print(f"  [dim]$ {' '.join(cmd)}[/dim]")
+    logger.debug(f"$ {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
     # Step 2: Download .pt from Modal Volume
@@ -63,7 +63,7 @@ def embed_fragments(
         "modal", "volume", "get", "prott5-output",
         output_name, str(output_pt),
     ]
-    console.print(f"  [dim]$ {' '.join(download_cmd)}[/dim]")
+    logger.debug(f"$ {' '.join(download_cmd)}")
     subprocess.run(download_cmd, check=True)
 
     if not output_pt.exists():
@@ -72,7 +72,10 @@ def embed_fragments(
         )
 
     size_mb = output_pt.stat().st_size / (1024 * 1024)
-    console.print(f"[green]✓ Downloaded[/green] {output_pt} ({size_mb:.1f} MB)")
+    logger.info(
+        f"Downloaded {output_pt} ({size_mb:.1f} MB)",
+        extra={"output_path": output_pt, "size_mb": size_mb},
+    )
     return output_pt
 
 
@@ -81,7 +84,7 @@ def download_model():
 
     Run this once before the first embedding job.
     """
-    console.print("[cyan]Downloading ProtT5-XL to Modal Volume...[/cyan]")
+    logger.info("Downloading ProtT5-XL to Modal Volume...")
     cmd = ["modal", "run", f"{MODAL_APP}::download_model"]
     subprocess.run(cmd, check=True)
-    console.print("[green]✓ Model cached on Volume 'prott5-model'[/green]")
+    logger.info("Model cached on Volume 'prott5-model'")
