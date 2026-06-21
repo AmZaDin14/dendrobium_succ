@@ -330,8 +330,8 @@ uv run dendrobium-succ evaluate -p data/processed/predictions.csv
 ```bash
 # Lewati fetch; gunakan FASTA protein Anda sendiri
 uv run dendrobium-succ run \
-    --input-fasta protein_saya.faa \
-    --output-csv prediksi_saya.csv
+    --input-fasta my_proteins.faa \
+    --output-csv my_predictions.csv
 ```
 
 ### C. Jalankan tahap individual

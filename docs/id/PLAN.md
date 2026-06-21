@@ -195,7 +195,7 @@ ADPTAGERNDDDAQSSKPLADDLFRSPPRSGGY
 **Verifikasi:**
 ```bash
 grep -c "^>" data/processed/fragments.fasta    # jumlah situs K
-awk 'NR%2==0 {if (length($0)!=33) print "PANJANG BURUK: "$0}' data/processed/fragments.fasta
+awk 'NR%2==0 {if (length($0)!=33) print "BAD LENGTH: "$0}' data/processed/fragments.fasta
 ```
 
 ---
