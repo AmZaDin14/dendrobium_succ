@@ -17,11 +17,8 @@ uv.lock
 *.swo
 
 # Data (keep directory structure, ignore large files)
-data/input/*.fasta
-data/input/*.faa
-data/processed/*.fasta
-data/processed/*.pt
-data/processed/*.csv
+data/input/*
+data/processed/*
 !data/input/.gitkeep
 !data/processed/.gitkeep
 
