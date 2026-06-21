@@ -20,7 +20,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 RLSUCCSITE_DIR="$(dirname "$PROJECT_DIR")/RLSuccSite"
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "  d_officinale_succ — Demo with RLSuccSite mini dataset"
+echo "  dendrobium_succ — Demo with RLSuccSite mini dataset"
 echo "═══════════════════════════════════════════════════════════════"
 
 # ── Check prerequisites ────────────────────────────────────────────
@@ -46,7 +46,7 @@ mkdir -p "$OUT_DIR"
 echo ""
 echo "── Step 1: Fragments ──"
 echo "  The mini dataset ships pre-extracted 33-mer fragments."
-echo "  (In a real run, you'd use: d-officinale-succ extract -i proteins.faa -o fragments.fasta)"
+echo "  (In a real run, you'd use: dendrobium-succ extract -i proteins.faa -o fragments.fasta)"
 cp "$MINI_FASTA" "$OUT_DIR/fragments.fasta"
 echo "  ✓ Fragments: $(grep -c '^>' "$OUT_DIR/fragments.fasta") sites"
 
@@ -54,14 +54,14 @@ echo "  ✓ Fragments: $(grep -c '^>' "$OUT_DIR/fragments.fasta") sites"
 echo ""
 echo "── Step 2: ProtT5 embedding ──"
 echo "  Skipped Modal GPU step — using pre-computed mini features."
-echo "  (In a real run, you'd use: d-officinale-succ embed -f fragments.fasta -o features.pt)"
+echo "  (In a real run, you'd use: dendrobium-succ embed -f fragments.fasta -o features.pt)"
 cp "$MINI_PT" "$OUT_DIR/features.pt"
 echo "  ✓ Features: $OUT_DIR/features.pt"
 
 # ── Step 3: RLSuccSite prediction ──────────────────────────────────
 echo ""
 echo "── Step 3: RLSuccSite ensemble prediction ──"
-uv run d-officinale-succ predict \
+uv run dendrobium-succ predict \
     --prott5-pt "$OUT_DIR/features.pt" \
     --fragments-fasta "$OUT_DIR/fragments.fasta" \
     --output-csv "$OUT_DIR/predictions.csv"

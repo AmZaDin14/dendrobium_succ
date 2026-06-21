@@ -1,4 +1,4 @@
-"""d_officinale_succ: Reproducible succinylation site prediction for Daucus officinale.
+"""dendrobium_succ: Reproducible succinylation site prediction for Dendrobium officinale.
 
 Wraps RLSuccSite's inference pipeline into a clean, reproducible harness:
   1. Extract 33-mer fragments around each lysine (K) from a protein FASTA

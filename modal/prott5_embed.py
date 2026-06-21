@@ -29,7 +29,7 @@ import time
 
 import modal
 
-app = modal.App("d-officinale-prott5-embed")
+app = modal.App("dendrobium-succ-prott5-embed")
 
 # ── Volumes ──────────────────────────────────────────────────────────
 HF_HOME = "/root/.cache/huggingface"

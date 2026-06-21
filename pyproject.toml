@@ -1,7 +1,7 @@
 [project]
-name = "d-officinale-succ"
+name = "dendrobium-succ"
 version = "0.1.0"
-description = "Reproducible succinylation site prediction harness for Daucus officinale using RLSuccSite"
+description = "Reproducible succinylation site prediction harness for Dendrobium officinale using RLSuccSite"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -16,14 +16,14 @@ dependencies = [
 ]
 
 [project.scripts]
-d-officinale-succ = "d_officinale_succ.cli:app"
+dendrobium-succ = "dendrobium_succ.cli:app"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/d_officinale_succ"]
+packages = ["src/dendrobium_succ"]
 
 [dependency-groups]
 dev = [

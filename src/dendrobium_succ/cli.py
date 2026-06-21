@@ -1,14 +1,14 @@
-"""CLI for d_officinale_succ — reproducible succinylation site prediction.
+"""CLI for dendrobium_succ — reproducible succinylation site prediction.
 
 Usage:
-    d-officinale-succ fetch --accession GCF_001605985.2 -o data/input/proteins.faa
-    d-officinale-succ fetch --organism "Daucus carota" -o data/input/proteins.faa
-    d-officinale-succ extract --input-fasta proteins.faa --output-fasta fragments.fasta
-    d-officinale-succ download-model
-    d-officinale-succ embed --fragments-fasta fragments.fasta --output-pt features.pt
-    d-officinale-succ predict --prott5-pt features.pt --fragments-fasta fragments.fasta --output-csv preds.csv
-    d-officinale-succ run --accession GCF_001605985.2 --output-csv preds.csv
-    d-officinale-succ run --input-fasta proteins.faa --output-csv preds.csv
+    dendrobium-succ fetch --accession GCF_001605985.2 -o data/input/proteins.faa
+    dendrobium-succ fetch --organism "Dendrobium catenatum" -o data/input/proteins.faa
+    dendrobium-succ extract --input-fasta proteins.faa --output-fasta fragments.fasta
+    dendrobium-succ download-model
+    dendrobium-succ embed --fragments-fasta fragments.fasta --output-pt features.pt
+    dendrobium-succ predict --prott5-pt features.pt --fragments-fasta fragments.fasta --output-csv preds.csv
+    dendrobium-succ run --accession GCF_001605985.2 --output-csv preds.csv
+    dendrobium-succ run --input-fasta proteins.faa --output-csv preds.csv
 
 Logging:
     All commands support --log-level (DEBUG/INFO/WARNING/ERROR) and --log-file.
@@ -30,8 +30,8 @@ from .predict import run_predict
 
 console = Console()
 app = typer.Typer(
-    name="d-officinale-succ",
-    help="Reproducible succinylation site prediction for Daucus officinale using RLSuccSite.",
+    name="dendrobium-succ",
+    help="Reproducible succinylation site prediction for Dendrobium officinale using RLSuccSite.",
     no_args_is_help=True,
 )
 
@@ -58,15 +58,15 @@ def main_callback(
 def fetch(
     output_fasta: Path = typer.Option("data/input/proteins.faa", "--output-fasta", "-o", help="Output protein FASTA path"),
     accession: str | None = typer.Option(None, "--accession", "-a", help="NCBI assembly accession (e.g. GCF_001605985.2)"),
-    organism: str | None = typer.Option(None, "--organism", help="Organism name to search NCBI (e.g. 'Daucus carota')"),
+    organism: str | None = typer.Option(None, "--organism", help="Organism name to search NCBI (e.g. 'Dendrobium catenatum')"),
 ):
     """Fetch protein FASTA from NCBI Datasets v2 API.
 
     Use --accession for a specific genome assembly (reliable).
     Use --organism to search NCBI and download the first RefSeq result.
 
-    Note: 'Daucus catenatum' is not a valid NCBI Taxonomy name.
-    Use accession GCF_001605985.2 or search 'Daucus carota'.
+    Note: search by organism may return multiple Dendrobium assemblies;
+    pass --accession (e.g. GCF_001605985.2) for a specific assembly.
 
     Set NCBI_API_KEY env var for higher rate limits (10 req/s vs 5 req/s).
     """

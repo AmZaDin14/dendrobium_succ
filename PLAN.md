@@ -1,4 +1,4 @@
-# Reproducible Plan: Succinylation Site Prediction for *Daucus officinale*
+# Reproducible Plan: Succinylation Site Prediction for *Dendrobium officinale*
 
 This document is a step-by-step, reproducible recipe for running RLSuccSite
 inference on a new protein dataset using this harness. Every step is
@@ -82,13 +82,13 @@ ls RLSuccSite/Models/*.pkl                # 2 scalers
 
 ```bash
 modal setup    # authenticate (one-time)
-modal token new --name d-officinale-succ
+modal token new --name dendrobium-succ
 ```
 
 ### 4. This harness
 
 ```bash
-cd /home/amri/Code/python/d_officinale_succ
+cd /home/amri/Code/python/dendrobium_succ
 uv sync       # install harness deps (biopython, modal, typer, rich)
 ```
 
@@ -102,7 +102,7 @@ ProtT5-XL (~2.8 GB) is downloaded once and stored on a Modal Volume for
 reuse across all future runs.
 
 ```bash
-uv run d-officinale-succ download-model
+uv run dendrobium-succ download-model
 # or directly:
 modal run modal/prott5_embed.py::download_model
 ```
@@ -121,15 +121,15 @@ NCBI Datasets v2 API. Two modes:
 **By accession (recommended — reliable):**
 ```bash
 # D. catenatum assembly (same as RLSuccSite's demo dataset)
-uv run d-officinale-succ fetch \
+uv run dendrobium-succ fetch \
     --accession GCF_001605985.2 \
     --output-fasta data/input/proteins.faa
 ```
 
 **By organism name (searches NCBI Taxonomy):**
 ```bash
-uv run d-officinale-succ fetch \
-    --organism "Daucus carota" \
+uv run dendrobium-succ fetch \
+    --organism "Dendrobium catenatum" \
     --output-fasta data/input/proteins.faa
 ```
 
@@ -149,8 +149,8 @@ head -2 data/input/proteins.faa          # check format
 ```
 
 **Notes:**
-- "Daucus catenatum" is NOT a valid NCBI Taxonomy name — use accession
-  GCF_001605985.2 directly, or search "Daucus carota" (carrot)
+- Searching by organism may return multiple Dendrobium assemblies; pass
+  `--accession GCF_001605985.2` for a specific assembly (recommended)
 - Set `NCBI_API_KEY` env var for 10 req/s (default 5 req/s) — optional
 - No API key required; no authentication needed
 
@@ -163,7 +163,7 @@ window centered on each lysine (K) residue. Fragments near termini are
 padded with 'X'.
 
 ```bash
-uv run d-officinale-succ extract \
+uv run dendrobium-succ extract \
     --input-fasta data/input/proteins.faa \
     --output-fasta data/processed/fragments.fasta
 ```
@@ -193,7 +193,7 @@ loads ProtT5-XL, tokenizes each 33-mer, runs the T5 encoder, and extracts
 the center-residue (index 16) embedding — a 1024-D vector per fragment.
 
 ```bash
-uv run d-officinale-succ embed \
+uv run dendrobium-succ embed \
     --fragments-fasta data/processed/fragments.fasta \
     --output-pt data/processed/features.pt
 ```
@@ -239,7 +239,7 @@ on-the-fly from the fragments FASTA, loads both trained PPO models,
 and produces a 50/50 ensemble prediction.
 
 ```bash
-uv run d-officinale-succ predict \
+uv run dendrobium-succ predict \
     --prott5-pt data/processed/features.pt \
     --fragments-fasta data/processed/fragments.fasta \
     --output-csv data/processed/predictions.csv
@@ -267,7 +267,7 @@ awk -F',' 'NR>1 && $4==1' data/processed/predictions.csv | wc -l
 
 **With fetch (from NCBI accession):**
 ```bash
-uv run d-officinale-succ run \
+uv run dendrobium-succ run \
     --accession GCF_001605985.2 \
     --output-csv data/processed/predictions.csv \
     --skip-model-download    # if Step 0 already done
@@ -275,7 +275,7 @@ uv run d-officinale-succ run \
 
 **With existing FASTA (skip fetch):**
 ```bash
-uv run d-officinale-succ run \
+uv run dendrobium-succ run \
     --input-fasta data/input/proteins.faa \
     --output-csv data/processed/predictions.csv \
     --skip-model-download
@@ -317,7 +317,7 @@ the Modal GPU step). Output: `data/processed/demo/predictions.csv`.
 
 ### `modal run` fails with authentication error
 ```bash
-modal token new --name d-officinale-succ
+modal token new --name dendrobium-succ
 ```
 
 ### ProtT5 model download fails
@@ -346,7 +346,7 @@ protein FASTA (.faa).
 ### GPU out of memory
 Reduce batch size:
 ```bash
-uv run d-officinale-succ embed --batch-size 16 ...
+uv run dendrobium-succ embed --batch-size 16 ...
 ```
 Or upgrade to L40S (48 GB) in `modal/prott5_embed.py`.
 
@@ -369,11 +369,11 @@ For 100k fragments: ~$0.30. For 1M fragments: ~$3.00.
 ## File Map
 
 ```
-d_officinale_succ/
+dendrobium_succ/
 ├── pyproject.toml                    # uv project (biopython, modal, typer, rich)
 ├── PLAN.md                           # this file
 ├── README.md                         # quick-start
-├── src/d_officinale_succ/
+├── src/dendrobium_succ/
 │   ├── __init__.py
 │   ├── cli.py                        # Typer CLI: fetch, extract, embed, predict, run
 │   ├── fetch.py                      # Step 1: NCBI Datasets API protein FASTA download

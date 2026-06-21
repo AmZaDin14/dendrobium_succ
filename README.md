@@ -1,6 +1,6 @@
-# d_officinale_succ
+# dendrobium_succ
 
-Reproducible succinylation site prediction harness for *Daucus officinale*
+Reproducible succinylation site prediction harness for *Dendrobium officinale*
 (carrot) using [RLSuccSite](https://github.com/RLSuccSite) — a reinforcement
 learning-based succinyllysine site predictor.
 
@@ -21,10 +21,10 @@ NCBI Assembly → fetch protein FASTA → extract 33-mer fragments → ProtT5-XL
 uv sync
 
 # 2. One-time: cache ProtT5-XL on Modal (~2.8 GB)
-uv run d-officinale-succ download-model
+uv run dendrobium-succ download-model
 
 # 3. Run the full pipeline (fetch from NCBI → extract → embed → predict)
-uv run d-officinale-succ run \
+uv run dendrobium-succ run \
     --accession GCF_001605985.2 \
     --output-csv data/processed/predictions.csv \
     --skip-model-download
@@ -43,17 +43,18 @@ uv run d-officinale-succ run \
 
 ```bash
 # Individual steps
-d-officinale-succ fetch --accession GCF_001605985.2 -o data/input/proteins.faa
-d-officinale-succ extract -i data/input/proteins.faa -o data/processed/fragments.fasta
-d-officinale-succ embed -f data/processed/fragments.fasta -o data/processed/features.pt
-d-officinale-succ predict --prott5-pt data/processed/features.pt -f data/processed/fragments.fasta -o data/processed/predictions.csv
+dendrobium-succ fetch --accession GCF_001605985.2 -o data/input/proteins.faa
+dendrobium-succ extract -i data/input/proteins.faa -o data/processed/fragments.fasta
+dendrobium-succ embed -f data/processed/fragments.fasta -o data/processed/features.pt
+dendrobium-succ predict --prott5-pt data/processed/features.pt -f data/processed/fragments.fasta -o data/processed/predictions.csv
 ```
 
 ## Prerequisites
 
 - **uv** — [install](https://docs.astral.sh/uv/getting-started/installation/)
 - **modal** — `uv tool install modal && modal setup`
-- **RLSuccSite** at `../RLSuccSite` with `.venv` configured (`cd ../RLSuccSite && uv sync`)
+
+The model weights are bundled in `models/rlsuccsite/`. No sibling repo required.
 
 ## Demo
 
@@ -76,7 +77,7 @@ SequenceID,Sequence,PositiveProbability,PredictedLabel
 ## Project Structure
 
 ```
-src/d_officinale_succ/    # Python package (CLI, fetch, extract, embed, predict, pipeline)
+src/dendrobium_succ/    # Python package (CLI, fetch, extract, embed, predict, pipeline)
 modal/prott5_embed.py     # Modal GPU app for ProtT5-XL embedding
 data/input/               # your protein FASTAs (gitignored)
 data/processed/           # outputs: fragments, features, predictions (gitignored)

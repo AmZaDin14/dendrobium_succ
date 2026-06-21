@@ -7,7 +7,7 @@ This replaces the RLSuccSite-NegCtrl package with a self-contained version
 that doesn't depend on sibling directory paths.
 
 Usage:
-    from d_officinale_succ.evaluate import run_full_evaluation
+    from dendrobium_succ.evaluate import run_full_evaluation
 
     metrics = run_full_evaluation(
         predictions_csv="data/processed/full/predictions.csv",

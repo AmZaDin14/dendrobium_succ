@@ -1,4 +1,4 @@
-"""Logging configuration for d_officinale_succ.
+"""Logging configuration for dendrobium_succ.
 
 Hybrid logging: pretty console output (rich) + structured JSON file (machine-parseable).
 
@@ -71,7 +71,7 @@ def setup_logging(
             Default: data/processed/run.log
     """
     # Get root logger
-    root_logger = logging.getLogger("d_officinale_succ")
+    root_logger = logging.getLogger("dendrobium_succ")
     root_logger.setLevel(getattr(logging, level.upper()))
 
     # Clear existing handlers
@@ -119,4 +119,4 @@ def get_logger(name: str) -> logging.Logger:
     Returns:
         Logger instance.
     """
-    return logging.getLogger(f"d_officinale_succ.{name}")
+    return logging.getLogger(f"dendrobium_succ.{name}")

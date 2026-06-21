@@ -5,7 +5,7 @@ Two modes:
      download_protein_fasta("GCF_001605985.2", "data/input/proteins.faa")
 
   2. By organism name (searches NCBI Taxonomy, picks first RefSeq assembly):
-     search_assemblies("Daucus carota") → ["GCF_001625215.2", ...]
+     search_assemblies("Dendrobium catenatum") → ["GCF_001625215.2", ...]
 
 API reference: https://www.ncbi.nlm.nih.gov/datasets/docs/v2/api/rest-api/
   - Search:  GET /genome/taxon/{name}/dataset_report?returned_content=ASSM_ACC
@@ -14,8 +14,8 @@ API reference: https://www.ncbi.nlm.nih.gov/datasets/docs/v2/api/rest-api/
 
 Auth: optional. Set NCBI_API_KEY env var for 10 req/s (default 5 req/s).
 
-Note: "Daucus catenatum" is NOT a valid NCBI Taxonomy name. Use the
-assembly accession GCF_001605985.2 directly, or search "Daucus carota".
+Note: search by organism may return multiple Dendrobium assemblies;
+pass an accession (e.g. GCF_001605985.2) for a specific assembly.
 """
 
 import io
@@ -60,7 +60,7 @@ def search_assemblies(
     """Search NCBI for genome assemblies by organism name or taxon ID.
 
     Args:
-        organism: Scientific name (e.g. "Daucus carota") or NCBI taxon ID
+        organism: Scientific name (e.g. "Dendrobium catenatum") or NCBI taxon ID
             (e.g. "4039"). Must match a valid NCBI Taxonomy node.
         refseq_only: If True, filter to RefSeq assemblies only.
         page_size: Results per page (max 1000).
@@ -69,7 +69,7 @@ def search_assemblies(
         List of dicts, each with keys:
             accession       — the version requested
             current_accession — latest version (use this for download)
-            organism_name   — e.g. "Daucus carota subsp. sativus"
+            organism_name   — e.g. "Dendrobium catenatum subsp. sativus"
             assembly_level  — e.g. "Chromosome"
             assembly_name   — e.g. "DH1 v3.0"
 

@@ -10,7 +10,7 @@ These verify the core logic without needing Modal or RLSuccSite:
 
 from pathlib import Path
 
-from d_officinale_succ.extract import extract_fragments
+from dendrobium_succ.extract import extract_fragments
 
 
 def test_basic_extraction(tmp_path: Path):

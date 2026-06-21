@@ -41,7 +41,7 @@ def run_pipeline(
         output_csv: Path to the final predictions CSV.
         input_fasta: Path to an existing protein FASTA (skip fetch).
         accession: NCBI assembly accession to fetch (e.g. "GCF_001605985.2").
-        organism: Organism name to search NCBI (e.g. "Daucus carota").
+        organism: Organism name to search NCBI (e.g. "Dendrobium catenatum").
         work_dir: Directory for intermediate files (default: alongside output).
         skip_model_download: Skip the one-time ProtT5 download step.
         batch_size: GPU batch size for ProtT5 embedding.
