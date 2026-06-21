@@ -22,11 +22,13 @@ from .logging_config import get_logger
 
 logger = get_logger(__name__)
 
-# RLSuccSite is a sibling directory: ../RLSuccSite
+# Local models directory (self-contained)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+LOCAL_MODELS_DIR = _PROJECT_ROOT / "models" / "rlsuccsite"
+
+# Fallback: sibling RLSuccSite directory
 RLSUCCSITE_DIR = _PROJECT_ROOT.parent / "RLSuccSite"
 RLSUCCSITE_PYTHON = RLSUCCSITE_DIR / ".venv" / "bin" / "python"
-PREDICT_PY = RLSUCCSITE_DIR / "Models" / "Predict.py"
 
 
 def run_predict(
@@ -54,16 +56,41 @@ def run_predict(
     fragments_fasta = Path(fragments_fasta).resolve()
     output_csv = Path(output_csv).resolve()
 
-    # Resolve RLSuccSite paths
-    base = Path(rlsuccsite_dir) if rlsuccsite_dir else RLSUCCSITE_DIR
-    python = base / ".venv" / "bin" / "python"
+    # Determine which RLSuccSite directory to use
+    if rlsuccsite_dir:
+        base = Path(rlsuccsite_dir)
+    elif LOCAL_MODELS_DIR.exists() and (LOCAL_MODELS_DIR / "Models" / "Predict.py").exists():
+        base = LOCAL_MODELS_DIR
+        logger.info(f"Using local RLSuccSite models: {base}")
+    elif RLSUCCSITE_DIR.exists():
+        base = RLSUCCSITE_DIR
+        logger.info(f"Using sibling RLSuccSite directory: {base}")
+    else:
+        raise FileNotFoundError(
+            f"RLSuccSite not found. Expected at:\n"
+            f"  - Local: {LOCAL_MODELS_DIR}\n"
+            f"  - Sibling: {RLSUCCSITE_DIR}\n"
+            f"Set --rlsuccsite-dir or copy models to models/rlsuccsite/"
+        )
+
+    # Find Python interpreter
+    local_python = _PROJECT_ROOT / ".venv" / "bin" / "python"
+    sibling_python = RLSUCCSITE_DIR / ".venv" / "bin" / "python"
+    
+    if local_python.exists():
+        python = local_python
+    elif sibling_python.exists():
+        python = sibling_python
+    else:
+        raise FileNotFoundError(
+            f"Python interpreter not found. Expected at:\n"
+            f"  - Local: {local_python}\n"
+            f"  - Sibling: {sibling_python}\n"
+            f"Run 'uv sync' to create the local venv."
+        )
+
     predict_py = base / "Models" / "Predict.py"
 
-    if not python.exists():
-        raise FileNotFoundError(
-            f"RLSuccSite Python not found: {python}\n"
-            f"Set --rlsuccsite-dir or ensure RLSuccSite is at {RLSUCCSITE_DIR}"
-        )
     if not predict_py.exists():
         raise FileNotFoundError(f"Predict.py not found: {predict_py}")
 
