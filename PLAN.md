@@ -6,7 +6,7 @@ automated and traceable via git conventional commits.
 
 **Related docs:**
 - [README.md](README.md) — quick start + landing page
-- [docs/architecture.md](docs/architecture.md) — system design + 25 design decisions (the "why")
+- [docs/architecture.md](docs/architecture.md) — system design + 24 design decisions (the "why")
 - [docs/cli-reference.md](docs/cli-reference.md) — full CLI command reference
 
 ---
@@ -195,7 +195,7 @@ awk 'NR%2==0 {if (length($0)!=33) print "BAD LENGTH: "$0}' data/processed/fragme
 
 ### Step 3 — ProtT5-XL Embedding (GPU, Modal)
 
-Send the fragments FASTA to Modal, where a GPU container (L4, 24 GB)
+Send the fragments FASTA to Modal, where a GPU container (L40S, 48 GB)
 loads ProtT5-XL, tokenizes each 33-mer, runs the T5 encoder, and extracts
 the center-residue (index 16) embedding — a 1024-D vector per fragment.
 
@@ -209,7 +209,7 @@ uv run dendrobium-succ embed \
 1. The FASTA content is sent to Modal as a string argument
 2. A GPU container starts (or reuses a warm one), loads ProtT5-XL from
    the cached Volume
-3. Fragments are processed in batches of 64 (configurable)
+3. Fragments are processed in batches of 512 (configurable)
 4. The .pt file is written to a Modal Volume, then downloaded locally
 
 **Output:** `data/processed/features.pt`
@@ -225,16 +225,16 @@ print(d['ids'][:3])         # first 3 IDs
 "
 ```
 
-**Cost:** ~$0.80/hr × ~2 min = ~$0.03 for 10k fragments. Scales linearly.
+**Cost:** ~$1.95/hr × ~2 min = ~$0.06 for 10k fragments. Scales linearly.
 
 **GPU selection:**
 | GPU | VRAM | $/hr | Best for |
 |-----|------|------|----------|
-| L4 | 24 GB | $0.80 | Default. Handles up to ~500k fragments per run |
-| A10 | 24 GB | $1.10 | Alternative if L4 unavailable |
-| L40S | 48 GB | $1.95 | Large batches (>500k), faster throughput |
+| L4 | 24 GB | $0.80 | Budget option; may OOM on very large batches |
+| A10 | 24 GB | $1.10 | Alternative to L4 |
+| L40S | 48 GB | $1.95 | Default. Handles up to ~1M fragments per run |
 
-To change GPU, edit `modal/prott5_embed.py` line `gpu="L4"`.
+To change GPU, edit `modal/prott5_embed.py` line `gpu="L40S"`.
 
 ---
 

@@ -31,7 +31,7 @@ def embed_fragments(
     Args:
         fragments_fasta: Path to the fragments FASTA (from extract step).
         output_pt: Where to write the .pt file locally.
-        batch_size: GPU batch size (default 64).
+        batch_size: GPU batch size (default 512).
 
     Returns:
         Path to the written .pt file.

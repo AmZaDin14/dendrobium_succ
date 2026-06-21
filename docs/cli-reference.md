@@ -132,7 +132,7 @@ uv run dendrobium-succ embed -f data/processed/fragments.fasta -o data/processed
 # Smaller batch (for GPUs with less VRAM)
 uv run dendrobium-succ embed -f fragments.fasta -o features.pt --batch-size 64
 
-# Larger batch (for L40S 48 GB GPU; edit modal/prott5_embed.py to change GPU)
+# Larger batch (GPU is already L40S 48 GB; the --batch-size flag tunes it)
 uv run dendrobium-succ embed -f fragments.fasta -o features.pt --batch-size 2048
 ```
 

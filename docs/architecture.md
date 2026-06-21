@@ -171,19 +171,20 @@ tensordict protlearn` manually.
 
 **7. Why `batch_size=512` for embed but `2048` for predict?**
 Different bottlenecks. Embedding is GPU-bound (VRAM limits batch — ProtT5-XL
-uses ~6 GB, leaving ~18 GB for activations on a 24 GB L4). Predict is
+uses ~6 GB, leaving ~42 GB for activations on a 48 GB L40S). Predict is
 CPU-bound (hand-crafted feature extraction, streaming). Larger batches in
 predict amortize subprocess startup; smaller batches in embed fit in VRAM.
 
-**8. Why L4 GPU specifically?**
+**8. Why L40S GPU specifically?**
 | GPU | VRAM | $/hr | Why not |
 |-----|------|------|---------|
 | T4 | 16 GB | $0.59 | Not enough VRAM for ProtT5-XL + activations |
-| L4 | 24 GB | $0.80 | ✅ Default — fits ProtT5-XL with headroom |
+| L4 | 24 GB | $0.80 | Budget option; may OOM on very large batches |
 | A10 | 24 GB | $1.10 | More expensive than L4, same VRAM |
-| L40S | 48 GB | $1.95 | Overkill for typical fragment counts; used for large batches |
+| L40S | 48 GB | $1.95 | ✅ Default — fits ProtT5-XL with headroom, fast throughput |
 
-L4 is Modal's default tier and the best $/perf for our workload.
+L40S is Modal's high-memory tier and the best $/perf for our workload. The
+extra VRAM (vs L4) lets us handle batches up to ~1M fragments per run.
 
 ### Reproducibility (5)
 
