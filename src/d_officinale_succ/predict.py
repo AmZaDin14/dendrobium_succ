@@ -50,9 +50,9 @@ def run_predict(
     Returns:
         Path to the output CSV.
     """
-    prott5_pt = Path(prott5_pt)
-    fragments_fasta = Path(fragments_fasta)
-    output_csv = Path(output_csv)
+    prott5_pt = Path(prott5_pt).resolve()
+    fragments_fasta = Path(fragments_fasta).resolve()
+    output_csv = Path(output_csv).resolve()
 
     # Resolve RLSuccSite paths
     base = Path(rlsuccsite_dir) if rlsuccsite_dir else RLSUCCSITE_DIR

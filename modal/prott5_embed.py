@@ -120,7 +120,7 @@ class ProtT5Embedder:
         self,
         fasta_content: str,
         output_filename: str,
-        batch_size: int = 512,
+        batch_size: int = 1024,
     ) -> str:
         """Embed 33-mer fragments and save .pt to the output Volume.
 
@@ -198,7 +198,7 @@ class ProtT5Embedder:
 def embed(
     fasta_path: str,
     output_name: str = "features.pt",
-    batch_size: int = 512,
+    batch_size: int = 1024,
 ):
     """Embed a fragments FASTA file with ProtT5 on GPU.
 
