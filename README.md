@@ -1,7 +1,7 @@
 # dendrobium_succ
 
 Reproducible succinylation site prediction harness for *Dendrobium officinale*
-(carrot) using [RLSuccSite](https://github.com/RLSuccSite) — a reinforcement
+(orchid) using [RLSuccSite](https://github.com/RLSuccSite) — a reinforcement
 learning-based succinyllysine site predictor.
 
 ## What This Does
