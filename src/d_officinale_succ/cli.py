@@ -93,7 +93,7 @@ def download_model_cmd():
 def embed(
     fragments_fasta: Path = typer.Option(..., "--fragments-fasta", "-f", help="Fragments FASTA from extract step"),
     output_pt: Path = typer.Option(..., "--output-pt", "-o", help="Output .pt file path"),
-    batch_size: int = typer.Option(64, "--batch-size", "-b", help="GPU batch size"),
+    batch_size: int = typer.Option(512, "--batch-size", "-b", help="GPU batch size"),
 ):
     """Embed fragments with ProtT5-XL on Modal GPU."""
     embed_fragments(fragments_fasta, output_pt, batch_size)
@@ -122,12 +122,12 @@ def predict(
 @app.command()
 def run(
     output_csv: Path = typer.Option(..., "--output-csv", "-o", help="Output predictions CSV"),
-    input_fasta: Path | None = typer.Option(None, "--input-fasta", "-i", help="Input protein FASTA (skip fetch)"),
-    accession: str | None = typer.Option(None, "--accession", "-a", help="NCBI assembly accession to fetch first"),
-    organism: str | None = typer.Option(None, "--organism", help="Organism name to search and fetch"),
-    work_dir: Path | None = typer.Option(None, "--work-dir", help="Directory for intermediate files"),
+    input_fasta: Path = typer.Option(None, "--input-fasta", "-i", help="Input protein FASTA (skip fetch)"),
+    accession: str = typer.Option(None, "--accession", "-a", help="NCBI assembly accession to fetch"),
+    organism: str = typer.Option(None, "--organism", help="Organism name to search NCBI"),
+    work_dir: Path = typer.Option(None, "--work-dir", help="Directory for intermediate files"),
     skip_model_download: bool = typer.Option(False, "--skip-model-download", help="Skip ProtT5 download (already done)"),
-    batch_size: int = typer.Option(64, "--batch-size", "-b", help="GPU batch size"),
+    batch_size: int = typer.Option(512, "--batch-size", "-b", help="GPU batch size"),
     num_workers: int = typer.Option(6, "--num-workers", "-n", help="CPU workers for feature extraction"),
 ):
     """Full pipeline: fetch → extract → embed → predict.

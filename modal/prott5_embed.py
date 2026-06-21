@@ -81,7 +81,7 @@ def download_model():
 
 @app.cls(
     image=image,
-    gpu="L4",
+    gpu="L40S",
     volumes={HF_HOME: MODEL_VOLUME, OUTPUT_DIR: OUTPUT_VOLUME},
     cpu=8.0,
     memory=32768,
@@ -95,6 +95,9 @@ class ProtT5Embedder:
     def setup(self):
         import torch
         from transformers import T5EncoderModel, T5Tokenizer
+
+        # Optimize GPU performance
+        torch.set_float32_matmul_precision("high")
 
         self.torch = torch
         print("Loading ProtT5-XL from Volume...")
@@ -110,14 +113,14 @@ class ProtT5Embedder:
         self.model.eval()
         self.device = torch.device("cuda")
         self.model = self.model.to(self.device)
-        print("ProtT5-XL loaded on GPU.")
+        print("ProtT5-XL loaded on GPU (L40S, precision=high).")
 
     @modal.method()
     def embed_fasta(
         self,
         fasta_content: str,
         output_filename: str,
-        batch_size: int = 64,
+        batch_size: int = 512,
     ) -> str:
         """Embed 33-mer fragments and save .pt to the output Volume.
 
@@ -195,7 +198,7 @@ class ProtT5Embedder:
 def embed(
     fasta_path: str,
     output_name: str = "features.pt",
-    batch_size: int = 64,
+    batch_size: int = 512,
 ):
     """Embed a fragments FASTA file with ProtT5 on GPU.
 

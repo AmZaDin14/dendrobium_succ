@@ -29,7 +29,7 @@ def run_pipeline(
     organism: str | None = None,
     work_dir: str | Path | None = None,
     skip_model_download: bool = False,
-    batch_size: int = 64,
+    batch_size: int = 512,
     num_workers: int = 6,
 ) -> Path:
     """Run the full succinylation prediction pipeline.

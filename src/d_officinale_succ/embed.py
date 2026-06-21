@@ -21,7 +21,7 @@ MODAL_APP = "modal/prott5_embed.py"
 def embed_fragments(
     fragments_fasta: str | Path,
     output_pt: str | Path,
-    batch_size: int = 64,
+    batch_size: int = 512,
 ) -> Path:
     """Embed 33-mer fragments with ProtT5-XL on Modal GPU.
 
