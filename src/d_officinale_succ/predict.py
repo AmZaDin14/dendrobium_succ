@@ -74,19 +74,20 @@ def run_predict(
         )
 
     # Find Python interpreter
-    local_python = _PROJECT_ROOT / ".venv" / "bin" / "python"
+    # Prefer sibling RLSuccSite venv (has all dependencies) over local venv
     sibling_python = RLSUCCSITE_DIR / ".venv" / "bin" / "python"
+    local_python = _PROJECT_ROOT / ".venv" / "bin" / "python"
     
-    if local_python.exists():
-        python = local_python
-    elif sibling_python.exists():
+    if sibling_python.exists():
         python = sibling_python
+    elif local_python.exists():
+        python = local_python
     else:
         raise FileNotFoundError(
             f"Python interpreter not found. Expected at:\n"
-            f"  - Local: {local_python}\n"
             f"  - Sibling: {sibling_python}\n"
-            f"Run 'uv sync' to create the local venv."
+            f"  - Local: {local_python}\n"
+            f"Run 'uv sync' in RLSuccSite or this project to create a venv."
         )
 
     predict_py = base / "Models" / "Predict.py"
