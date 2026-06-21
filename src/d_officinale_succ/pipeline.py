@@ -1,6 +1,7 @@
-"""Full pipeline orchestration: extract → embed → predict.
+"""Full pipeline orchestration: fetch → extract → embed → predict.
 
-Given a protein FASTA, runs all three steps end-to-end:
+Given a protein FASTA (or an NCBI accession to fetch one), runs all steps:
+  0. (Optional) Fetch protein FASTA from NCBI Datasets API
   1. Extract 33-mer fragments around each K (CPU, local)
   2. Embed fragments with ProtT5-XL (GPU, Modal)
   3. Run RLSuccSite ensemble prediction (CPU, local via RLSuccSite's venv)
@@ -13,14 +14,17 @@ from rich.table import Table
 
 from .embed import download_model, embed_fragments
 from .extract import extract_fragments
+from .fetch import fetch as fetch_fasta
 from .predict import run_predict
 
 console = Console()
 
 
 def run_pipeline(
-    input_fasta: str | Path,
     output_csv: str | Path,
+    input_fasta: str | Path | None = None,
+    accession: str | None = None,
+    organism: str | None = None,
     work_dir: str | Path | None = None,
     skip_model_download: bool = False,
     batch_size: int = 64,
@@ -28,10 +32,15 @@ def run_pipeline(
 ) -> Path:
     """Run the full succinylation prediction pipeline.
 
+    Provide exactly one of *input_fasta*, *accession*, or *organism*.
+    If accession/organism is given, the protein FASTA is fetched from NCBI first.
+
     Args:
-        input_fasta: Path to the input protein FASTA (.faa / .fasta).
         output_csv: Path to the final predictions CSV.
-        work_dir: Directory for intermediate files (default: alongside input).
+        input_fasta: Path to an existing protein FASTA (skip fetch).
+        accession: NCBI assembly accession to fetch (e.g. "GCF_001605985.2").
+        organism: Organism name to search NCBI (e.g. "Daucus carota").
+        work_dir: Directory for intermediate files (default: alongside output).
         skip_model_download: Skip the one-time ProtT5 download step.
         batch_size: GPU batch size for ProtT5 embedding.
         num_workers: CPU workers for hand-crafted feature extraction.
@@ -39,7 +48,6 @@ def run_pipeline(
     Returns:
         Path to the output CSV.
     """
-    input_fasta = Path(input_fasta)
     output_csv = Path(output_csv)
 
     if work_dir is None:
@@ -51,25 +59,37 @@ def run_pipeline(
     fragments_fasta = work_dir / "fragments.fasta"
     features_pt = work_dir / "features.pt"
 
-    # ── Step 0: One-time model download ─────────────────────────────
+    # ── Step 0a: One-time model download ────────────────────────────
     if not skip_model_download:
         console.rule("[bold cyan]Step 0: Download ProtT5-XL to Modal Volume[/bold cyan]")
         download_model()
 
-    # ── Step 1: Extract fragments ───────────────────────────────────
-    console.rule("[bold cyan]Step 1: Extract 33-mer fragments around each K[/bold cyan]")
+    # ── Step 0b: Fetch protein FASTA from NCBI (if needed) ──────────
+    if input_fasta is None:
+        console.rule("[bold cyan]Step 1: Fetch protein FASTA from NCBI[/bold cyan]")
+        input_fasta = work_dir / "proteins.faa"
+        fetch_fasta(
+            organism=organism,
+            accession=accession,
+            output_fasta=input_fasta,
+        )
+    else:
+        input_fasta = Path(input_fasta)
+
+    # ── Step 2: Extract fragments ───────────────────────────────────
+    console.rule("[bold cyan]Step 2: Extract 33-mer fragments around each K[/bold cyan]")
     n_fragments = extract_fragments(input_fasta, fragments_fasta)
 
     if n_fragments == 0:
         console.print("[yellow]No lysine (K) sites found. Nothing to predict.[/yellow]")
         return output_csv
 
-    # ── Step 2: ProtT5 embedding (Modal GPU) ────────────────────────
-    console.rule("[bold cyan]Step 2: ProtT5-XL embedding (Modal GPU)[/bold cyan]")
+    # ── Step 3: ProtT5 embedding (Modal GPU) ────────────────────────
+    console.rule("[bold cyan]Step 3: ProtT5-XL embedding (Modal GPU)[/bold cyan]")
     embed_fragments(fragments_fasta, features_pt, batch_size=batch_size)
 
-    # ── Step 3: RLSuccSite ensemble prediction ──────────────────────
-    console.rule("[bold cyan]Step 3: RLSuccSite ensemble prediction[/bold cyan]")
+    # ── Step 4: RLSuccSite ensemble prediction ──────────────────────
+    console.rule("[bold cyan]Step 4: RLSuccSite ensemble prediction[/bold cyan]")
     run_predict(
         prott5_pt=features_pt,
         fragments_fasta=fragments_fasta,

@@ -6,11 +6,12 @@ learning-based succinyllysine site predictor.
 
 ## What This Does
 
-Given a protein FASTA, predicts which lysine (K) residues are likely
-succinylated using RLSuccSite's trained ensemble (ProtT5 + TPEMPPS_CCP).
+Given a protein FASTA (fetched from NCBI or your own), predicts which lysine
+(K) residues are likely succinylated using RLSuccSite's trained ensemble
+(ProtT5 + TPEMPPS_CCP).
 
 ```
-Protein FASTA → extract 33-mer fragments → ProtT5-XL embedding (GPU) → ensemble prediction → CSV
+NCBI Assembly → fetch protein FASTA → extract 33-mer fragments → ProtT5-XL embedding (GPU) → ensemble prediction → CSV
 ```
 
 ## Quick Start
@@ -22,9 +23,9 @@ uv sync
 # 2. One-time: cache ProtT5-XL on Modal (~2.8 GB)
 uv run d-officinale-succ download-model
 
-# 3. Run the full pipeline
+# 3. Run the full pipeline (fetch from NCBI → extract → embed → predict)
 uv run d-officinale-succ run \
-    --input-fasta data/input/proteins.faa \
+    --accession GCF_001605985.2 \
     --output-csv data/processed/predictions.csv \
     --skip-model-download
 ```
@@ -33,17 +34,19 @@ uv run d-officinale-succ run \
 
 | Command | Description |
 |---------|-------------|
+| `fetch` | Download protein FASTA from NCBI Datasets API (by accession or organism) |
 | `extract` | Extract 33-mer fragments around each K (CPU, local) |
 | `download-model` | One-time: cache ProtT5-XL on Modal Volume |
 | `embed` | Embed fragments with ProtT5-XL on Modal GPU |
 | `predict` | Run RLSuccSite ensemble prediction (CPU, local) |
-| `run` | Full pipeline: extract → embed → predict |
+| `run` | Full pipeline: fetch → extract → embed → predict |
 
 ```bash
 # Individual steps
-uv run d-officinale-succ extract -i data/input/proteins.faa -o data/processed/fragments.fasta
-uv run d-officinale-succ embed -f data/processed/fragments.fasta -o data/processed/features.pt
-uv run d-officinale-succ predict --prott5-pt data/processed/features.pt -f data/processed/fragments.fasta -o data/processed/predictions.csv
+d-officinale-succ fetch --accession GCF_001605985.2 -o data/input/proteins.faa
+d-officinale-succ extract -i data/input/proteins.faa -o data/processed/fragments.fasta
+d-officinale-succ embed -f data/processed/fragments.fasta -o data/processed/features.pt
+d-officinale-succ predict --prott5-pt data/processed/features.pt -f data/processed/fragments.fasta -o data/processed/predictions.csv
 ```
 
 ## Prerequisites
@@ -73,7 +76,7 @@ SequenceID,Sequence,PositiveProbability,PredictedLabel
 ## Project Structure
 
 ```
-src/d_officinale_succ/    # Python package (CLI, extract, embed, predict, pipeline)
+src/d_officinale_succ/    # Python package (CLI, fetch, extract, embed, predict, pipeline)
 modal/prott5_embed.py     # Modal GPU app for ProtT5-XL embedding
 data/input/               # your protein FASTAs (gitignored)
 data/processed/           # outputs: fragments, features, predictions (gitignored)

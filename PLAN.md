@@ -10,7 +10,14 @@ automated and traceable via git conventional commits.
 
 ```
                     ┌─────────────────┐
-                    │  Protein FASTA   │  (your input: .faa / .fasta)
+                    │  NCBI Assembly   │  (accession or organism name)
+                    └────────┬────────┘
+                             │
+                   Step 0: fetch (HTTP, NCBI Datasets v2 API)
+                   Download protein.faa from genome assembly
+                             │
+                    ┌────────▼────────┐
+                    │  Protein FASTA   │  (.faa)
                     └────────┬────────┘
                              │
                    Step 1: extract (CPU, local)
@@ -37,7 +44,7 @@ automated and traceable via git conventional commits.
 
 **Why Modal for step 2 only?** ProtT5-XL is a 3B-parameter transformer
 (~2.8 GB). On CPU, embedding 1000 fragments takes ~30 min; on an L4 GPU,
-~30 seconds. Steps 1 and 3 are lightweight CPU operations.
+~30 seconds. Steps 0, 1, and 3 are lightweight CPU/HTTP operations.
 
 ---
 
@@ -106,19 +113,58 @@ modal run modal/prott5_embed.py::download_model
 
 ---
 
-### Step 1 — Extract 33-mer Fragments (CPU, local)
+### Step 1 — Fetch Protein FASTA from NCBI (HTTP, local)
 
-Given a protein FASTA (e.g. from NCBI or UniProt), extract a 33-mer
+Download the complete proteome (.faa) for a genome assembly from the
+NCBI Datasets v2 API. Two modes:
+
+**By accession (recommended — reliable):**
+```bash
+# D. catenatum assembly (same as RLSuccSite's demo dataset)
+uv run d-officinale-succ fetch \
+    --accession GCF_001605985.2 \
+    --output-fasta data/input/proteins.faa
+```
+
+**By organism name (searches NCBI Taxonomy):**
+```bash
+uv run d-officinale-succ fetch \
+    --organism "Daucus carota" \
+    --output-fasta data/input/proteins.faa
+```
+
+**How it works:**
+1. (If `--organism`) Searches `GET /genome/taxon/{name}/dataset_report` for
+   RefSeq assemblies, picks the first result
+2. Downloads `GET /genome/accession/{acc}/download?include_annotation_type=PROT_FASTA`
+   — returns a ZIP
+3. Extracts `ncbi_dataset/data/{acc}/protein.faa` from the ZIP
+
+**Output:** `data/input/proteins.faa` (e.g. 18 MB, 34,389 proteins for GCF_001605985.2)
+
+**Verify:**
+```bash
+grep -c "^>" data/input/proteins.faa    # protein count
+head -2 data/input/proteins.faa          # check format
+```
+
+**Notes:**
+- "Daucus catenatum" is NOT a valid NCBI Taxonomy name — use accession
+  GCF_001605985.2 directly, or search "Daucus carota" (carrot)
+- Set `NCBI_API_KEY` env var for 10 req/s (default 5 req/s) — optional
+- No API key required; no authentication needed
+
+---
+
+### Step 2 — Extract 33-mer Fragments (CPU, local)
+
+Given a protein FASTA (fetched above or your own), extract a 33-mer
 window centered on each lysine (K) residue. Fragments near termini are
 padded with 'X'.
 
 ```bash
-# Place your protein FASTA in data/input/
-cp /path/to/protein.faa data/input/D_officinale.faa
-
-# Extract fragments
 uv run d-officinale-succ extract \
-    --input-fasta data/input/D_officinale.faa \
+    --input-fasta data/input/proteins.faa \
     --output-fasta data/processed/fragments.fasta
 ```
 
@@ -140,7 +186,7 @@ awk 'NR%2==0 {if (length($0)!=33) print "BAD LENGTH: "$0}' data/processed/fragme
 
 ---
 
-### Step 2 — ProtT5-XL Embedding (GPU, Modal)
+### Step 3 — ProtT5-XL Embedding (GPU, Modal)
 
 Send the fragments FASTA to Modal, where a GPU container (L4, 24 GB)
 loads ProtT5-XL, tokenizes each 33-mer, runs the T5 encoder, and extracts
@@ -185,7 +231,7 @@ To change GPU, edit `modal/prott5_embed.py` line `gpu="L4"`.
 
 ---
 
-### Step 3 — RLSuccSite Ensemble Prediction (CPU, local)
+### Step 4 — RLSuccSite Ensemble Prediction (CPU, local)
 
 Run RLSuccSite's `Models/Predict.py` via its own virtual environment.
 This computes hand-crafted features (TPEMPPS 528-D + CCP 462-D = 990-D)
@@ -219,11 +265,20 @@ awk -F',' 'NR>1 && $4==1' data/processed/predictions.csv | wc -l
 
 ### Full Pipeline (All Steps at Once)
 
+**With fetch (from NCBI accession):**
 ```bash
 uv run d-officinale-succ run \
-    --input-fasta data/input/D_officinale.faa \
+    --accession GCF_001605985.2 \
     --output-csv data/processed/predictions.csv \
     --skip-model-download    # if Step 0 already done
+```
+
+**With existing FASTA (skip fetch):**
+```bash
+uv run d-officinale-succ run \
+    --input-fasta data/input/proteins.faa \
+    --output-csv data/processed/predictions.csv \
+    --skip-model-download
 ```
 
 Intermediate files go to `data/processed/intermediate/` by default.
@@ -301,6 +356,7 @@ Or upgrade to L40S (48 GB) in `modal/prott5_embed.py`.
 
 | Step | Resource | Time (10k fragments) | Cost |
 |------|----------|---------------------|------|
+| Fetch | HTTP (NCBI API) | ~10 sec | $0 |
 | Extract | CPU (local) | ~5 sec | $0 |
 | Embed | L4 GPU (Modal) | ~2 min | ~$0.03 |
 | Predict | CPU (local) | ~3 min | $0 |
@@ -319,10 +375,11 @@ d_officinale_succ/
 ├── README.md                         # quick-start
 ├── src/d_officinale_succ/
 │   ├── __init__.py
-│   ├── cli.py                        # Typer CLI: extract, embed, predict, run
-│   ├── extract.py                    # Step 1: fragment extraction
-│   ├── embed.py                      # Step 2: Modal client wrapper
-│   ├── predict.py                    # Step 3: RLSuccSite Predict.py wrapper
+│   ├── cli.py                        # Typer CLI: fetch, extract, embed, predict, run
+│   ├── fetch.py                      # Step 1: NCBI Datasets API protein FASTA download
+│   ├── extract.py                    # Step 2: fragment extraction
+│   ├── embed.py                      # Step 3: Modal client wrapper
+│   ├── predict.py                    # Step 4: RLSuccSite Predict.py wrapper
 │   └── pipeline.py                   # Full pipeline orchestration
 ├── modal/
 │   └── prott5_embed.py               # Modal GPU app (ProtT5-XL embedding)
