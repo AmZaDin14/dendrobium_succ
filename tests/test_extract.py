@@ -16,24 +16,25 @@ from d_officinale_succ.extract import extract_fragments
 def test_basic_extraction(tmp_path: Path):
     """Single protein with one K in the middle → one 33-mer fragment."""
     fasta = tmp_path / "test.fasta"
-    fasta.write_text(">prot1\nACDEFGHIKLMNPQRSTVWYACDEFGHIKLMNPQR\n")
+    # 40 AA with a single K at position 20 (1-based)
+    fasta.write_text(">prot1\nAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAAA\n")
 
     out = tmp_path / "fragments.fasta"
     count = extract_fragments(fasta, out)
 
     assert count == 1
     lines = out.read_text().strip().split("\n")
-    assert lines[0] == ">prot1|pos_9"
+    assert lines[0] == ">prot1|pos_20"
     assert len(lines[1]) == 33
-    # K is at position 9 (1-based), center of 33-mer is index 16 (0-based)
+    # K is at position 20 (1-based), center of 33-mer is index 16 (0-based)
     assert lines[1][16] == "K"
 
 
 def test_multiple_lysines(tmp_path: Path):
     """Protein with multiple K residues → multiple fragments."""
     fasta = tmp_path / "test.fasta"
-    # 50 AA with K at positions 5, 15, 25, 35 (1-based)
-    fasta.write_text(">prot1\nACDEKFGHIKLMNOPQRSTVWKYZACDEKFGHIKLMNOPQRSTVWKYZAB\n")
+    # 50 AA with K at positions 5, 15, 25, 35 (1-based), rest are A
+    fasta.write_text(">prot1\nAAAAKAAAAAAAAAKAAAAAAAAAKAAAAAAAAAKAAAAAAAAAAAAA\n")
 
     out = tmp_path / "fragments.fasta"
     count = extract_fragments(fasta, out)

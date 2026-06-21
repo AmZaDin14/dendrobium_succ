@@ -42,28 +42,28 @@ fi
 OUT_DIR="$PROJECT_DIR/data/processed/demo"
 mkdir -p "$OUT_DIR"
 
-# ── Step 1: Re-extract fragments from the mini FASTA ──────────────
+# ── Step 1: Fragments ─────────────────────────────────────────────
 echo ""
-echo "── Step 1: Verify fragment extraction ──"
-uv run d-officinale-succ extract \
-    --input-fasta "$MINI_FASTA" \
-    --output-fasta "$OUT_DIR/fragments.fasta"
-echo "  ✓ Fragment extraction verified"
+echo "── Step 1: Fragments ──"
+echo "  The mini dataset ships pre-extracted 33-mer fragments."
+echo "  (In a real run, you'd use: d-officinale-succ extract -i proteins.faa -o fragments.fasta)"
+cp "$MINI_FASTA" "$OUT_DIR/fragments.fasta"
+echo "  ✓ Fragments: $(grep -c '^>' "$OUT_DIR/fragments.fasta") sites"
 
-# ── Step 2: ProtT5 embedding on Modal GPU ──────────────────────────
+# ── Step 2: ProtT5 embedding ──────────────────────────────────────
 echo ""
-echo "── Step 2: ProtT5 embedding (Modal GPU) ──"
-echo "  Note: This downloads ProtT5-XL (~2.8GB) on first run."
-echo "  Skipping — using pre-computed mini features instead."
+echo "── Step 2: ProtT5 embedding ──"
+echo "  Skipped Modal GPU step — using pre-computed mini features."
+echo "  (In a real run, you'd use: d-officinale-succ embed -f fragments.fasta -o features.pt)"
 cp "$MINI_PT" "$OUT_DIR/features.pt"
-echo "  ✓ Using pre-computed features: $OUT_DIR/features.pt"
+echo "  ✓ Features: $OUT_DIR/features.pt"
 
 # ── Step 3: RLSuccSite prediction ──────────────────────────────────
 echo ""
 echo "── Step 3: RLSuccSite ensemble prediction ──"
 uv run d-officinale-succ predict \
     --prott5-pt "$OUT_DIR/features.pt" \
-    --fragments-fasta "$MINI_FASTA" \
+    --fragments-fasta "$OUT_DIR/fragments.fasta" \
     --output-csv "$OUT_DIR/predictions.csv"
 
 # ── Summary ────────────────────────────────────────────────────────
