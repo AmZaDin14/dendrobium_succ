@@ -124,7 +124,7 @@ classification, fixed random seed for negative generation).
 
 This section captures the "why" behind each major design choice. Decisions are
 grouped by category. For a fuller discussion of trade-offs, see the
-[git log](https://github.com/...) (conventional commits trace each change).
+[git log](../) — conventional commits trace each change.
 
 ### Architecture (8)
 

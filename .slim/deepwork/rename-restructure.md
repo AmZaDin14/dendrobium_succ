@@ -212,26 +212,70 @@ Constraint: must NOT collide with upstream `rlsuccsite` (Zhangqingchao-Ch/RLSucc
 - Baseline metrics: F1=0.6981, MCC=0.2890, Recall=0.8605, AUC-ROC=0.6486, AUC-PR=0.6127
 - Saved to `data/wetlab/baseline/` (gitignored)
 
-### Phase 1: Delete dead code (NEXT)
-- `rm -rf src/d_officinale_succ/negctrl/`
-- `rm last_run_embedding.ipynb`
-- `rm scripts/compare_results.py`
-- Remove `src/d_officinale_succ/negctrl/` line from `.gitignore`
-- Commit: `chore: remove dead code (negctrl, stale notebook, one-off script)`
+### Phase 1: Delete dead code ✓
+- Commit `1b89ee9`: removed `negctrl/`, `last_run_embedding.ipynb`, `scripts/compare_results.py`
+- @oracle reviewed: clean, no broken imports
+- Follow-up commit `387de74`: gitignore `data/wetlab/baseline/`
 
-### Phase 2: Rename
-- TBD (waiting for Phase 1 to complete)
+### Phase 2: Rename ✓
+- Commit `42d8681`: renamed package, CLI, Modal app, all references
+- Fixed Daucus→Dendrobium genus bug in `fetch.py`, `cli.py`, `PLAN.md`
+- Updated Modal app name to `dendrobium-succ-prott5-embed` (volumes unchanged)
+- Metrics **identical** to baseline (F1=0.6981, MCC=0.2890, Recall=0.8605)
+- @oracle reviewed: clean, zero stale references
+- Follow-up commit `1777b7c`: README "(carrot)" → "(orchid)", gitignore all eval output dirs
 
-### Phase 3: Validate
-- TBD
+### Phase 3: Final validation + directory rename ✓
+- Parent directory renamed: `d_officinale_succ/` → `dendrobium_succ/`
+- Recreated .venv (old shebang pointed to old path)
+- `uv run pytest` — 6 passed
+- `uv run dendrobium-succ --help` — works
+- `uv run dendrobium-succ evaluate` — metrics identical to baseline
 
 ### Phase 4: GitHub remote
-- TBD (optional)
+- Optional, not done. User can push to a new `dendrobium-succ` repo on GitHub.
+
+---
+
+## Final State
+
+**New names:**
+- Directory: `dendrobium_succ/`
+- Package: `dendrobium_succ` (src/dendrobium_succ/)
+- CLI: `dendrobium-succ`
+- Modal app: `dendrobium-succ-prott5-embed`
+- Modal volumes: `prott5-model`, `prott5-output` (unchanged)
+- PyPI name: `dendrobium-succ`
+
+**Removed (Phase 1):**
+- `src/d_officinale_succ/negctrl/` (gitignored reference)
+- `last_run_embedding.ipynb` (stale scratch)
+- `scripts/compare_results.py` (one-off, sibling-path hardcoded)
+
+**Bugs fixed (Phase 2):**
+- `fetch.py`, `cli.py`, `PLAN.md` claimed "Daucus catenatum is NOT a valid NCBI Taxonomy name" — wrong (confused carrot genus with orchid genus)
+- `README.md` said "(carrot)" — wrong (Dendrobium officinale is an orchid)
+- `README.md:57` listed dead `../RLSuccSite` prerequisite
+
+**Validation:**
+- 6 tests pass (unchanged)
+- Metrics: F1=0.6981, MCC=0.2890, Recall=0.8605, AUC-ROC=0.6486, AUC-PR=0.6127 (identical to pre-rename baseline)
+
+---
+
+## Git history
+```
+1777b7c fix: README says (orchid) not (carrot); gitignore all eval output dirs
+42d8681 refactor: rename package d_officinale_succ → dendrobium_succ
+387de74 chore: gitignore data/wetlab/baseline/ (regenerable from evaluate)
+1b89ee9 chore: remove dead code (negctrl, stale notebook, one-off script)
+```
 
 ---
 
 ## Specialist reviews
 - [x] @oracle: plan review (completed ses_116427f7effeTK8iGSS4ztUV9H)
-- [ ] @oracle: Phase 1 review (after dead code cleanup)
-- [ ] @oracle: Phase 2 review (after rename)
-- [ ] @oracle: Phase 3 review (after validation)
+- [x] @oracle: Phase 1 review (completed ses_1163465a5ffeqLqu2HFQbwKLjS)
+- [x] @oracle: Phase 2 review (completed ses_1163465a5ffeqLqu2HFQbwKLjS — reused)
+- [ ] @oracle: Phase 3 final review (optional — metrics + tests already validated)
+

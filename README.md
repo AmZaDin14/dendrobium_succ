@@ -68,8 +68,7 @@ uv run dendrobium-succ evaluate \
 Outputs `matches.csv` (per-site predictions vs ground truth), `metrics.json`
 (aggregate metrics: precision, recall, F1, MCC, AUC-ROC, AUC-PR), and
 `pr_curve.png` (precision-recall curve). The evaluation also generates 1:1
-same-protein synthetic negatives, matching the [RLSuccSite-NegCtrl](https://
-github.com/...) policy for fair precision/F1/MCC computation.
+same-protein synthetic negatives for fair precision/F1/MCC computation.
 
 ## CLI Commands
 
