@@ -4,6 +4,11 @@ This document is a step-by-step, reproducible recipe for running RLSuccSite
 inference on a new protein dataset using this harness. Every step is
 automated and traceable via git conventional commits.
 
+**Related docs:**
+- [README.md](README.md) — quick start + landing page
+- [docs/architecture.md](docs/architecture.md) — system design + 25 design decisions (the "why")
+- [docs/cli-reference.md](docs/cli-reference.md) — full CLI command reference
+
 ---
 
 ## Architecture Overview
@@ -36,15 +41,26 @@ automated and traceable via git conventional commits.
                              │
                    Step 3: predict (CPU, local via RLSuccSite)
                    Ensemble: ProtT5 model + TPEMPPS_CCP model
-                             │
-                    ┌────────▼────────┐
-                    │ predictions.csv  │  (SequenceID, Sequence, Prob, Label)
-                    └─────────────────┘
+                            │
+                     ┌────────▼────────┐
+                     │ predictions.csv  │  (SequenceID, Sequence, Prob, Label)
+                     └────────┬────────┘
+                              │
+                   Step 4: evaluate (CPU, local)
+                   Score against wet-lab ground truth
+                            │
+                     ┌────────▼────────┐
+                     │ matches.csv      │  (per-site predictions vs truth)
+                     │ metrics.json     │  (F1, MCC, AUC-ROC, AUC-PR)
+                     │ pr_curve.png     │  (precision-recall plot)
+                     └─────────────────┘
 ```
 
 **Why Modal for step 2 only?** ProtT5-XL is a 3B-parameter transformer
 (~2.8 GB). On CPU, embedding 1000 fragments takes ~30 min; on an L4 GPU,
-~30 seconds. Steps 0, 1, and 3 are lightweight CPU/HTTP operations.
+~30 seconds. Steps 0, 1, 3, and 4 are lightweight CPU/HTTP operations.
+See [docs/architecture.md](docs/architecture.md) for the full design
+rationale.
 
 ---
 
@@ -254,6 +270,51 @@ awk -F',' 'NR>1 && $4==1' data/processed/predictions.csv | wc -l
 
 ---
 
+### Step 5 — Wet-Lab Evaluation (CPU, local)
+
+Score the predictions against the Feng et al. 2017 wet-lab test set (314
+succinylation sites on *D. officinale*). The evaluator generates 1:1
+same-protein synthetic negatives, joins predictions to ground truth, and
+computes precision, recall, F1, MCC, AUC-ROC, AUC-PR.
+
+```bash
+uv run dendrobium-succ evaluate \
+    --predictions-csv data/processed/predictions.csv \
+    --test-csv data/wetlab/test.csv \
+    --protein-fasta data/wetlab/protein.faa \
+    --output-dir data/wetlab/results
+```
+
+**Inputs:**
+- `predictions-csv`: the output of Step 4
+- `test-csv`: 314 Feng et al. 2017 wet-lab succinylation sites (bundled)
+- `protein-fasta`: 19 MB RefSeq proteome (bundled) — used to find same-protein
+  K-sites for synthetic negative generation
+
+**Outputs (in `output-dir/`):**
+
+| File | Contents |
+|------|----------|
+| `matches.csv` | Per-site predictions vs ground truth |
+| `metrics.json` | Aggregate metrics (precision, recall, F1, MCC, AUC-ROC, AUC-PR) |
+| `pr_curve.png` | Precision-recall curve plot |
+
+**What it does:**
+1. Maps Feng et al. test sites to RefSeq accessions via peptide matching
+2. Generates 1:1 same-protein synthetic negatives (seed=42 by default)
+3. Joins predictions to positives + negatives
+4. Computes TP/FP/TN/FN and aggregate metrics
+5. Plots precision-recall curve
+
+**Expected metrics** (for the demo pipeline, GCF_001605985.2):
+- Recall: ~0.86 (260/301 wet-lab sites detected)
+- F1: ~0.70 (with 1:1 negatives)
+- MCC: ~0.29
+
+For full flag details, see [docs/cli-reference.md](docs/cli-reference.md#evaluate).
+
+---
+
 ### Full Pipeline (All Steps at Once)
 
 **With fetch (from NCBI accession):**
@@ -360,6 +421,7 @@ Or upgrade to L40S (48 GB) in `modal/prott5_embed.py`.
 | Extract | CPU (local) | ~5 sec | $0 |
 | Embed | L4 GPU (Modal) | ~2 min | ~$0.03 |
 | Predict | CPU (local) | ~3 min | $0 |
+| Evaluate | CPU (local) | ~5 sec | $0 |
 | **Total** | | | **~$0.03** |
 
 For 100k fragments: ~$0.30. For 1M fragments: ~$3.00.
