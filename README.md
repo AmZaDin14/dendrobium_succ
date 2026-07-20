@@ -21,11 +21,11 @@ NCBI Assembly → fetch FASTA → extract 33-mers → ProtT5-XL (GPU) → ensemb
 ## Quick Start
 
 ```bash
-# 1. Install
+# 1. Install (Python 3.11 auto-detected via .python-version)
 uv sync
 
 # 2. Authenticate with Modal (one-time)
-uv tool install modal && modal setup
+modal setup
 
 # 3. One-time: cache ProtT5-XL on Modal Volume (~2.8 GB)
 uv run dendrobium-succ download-model
@@ -88,13 +88,12 @@ See [docs/cli-reference.md](docs/cli-reference.md) for full flag details.
 
 ## Prerequisites
 
-- **uv** — [install](https://docs.astral.sh/uv/getting-started/installation/)
-- **modal** — `uv tool install modal && modal setup`
-- **A Python venv with `torch`, `torchrl`, `tensordict`, `protlearn`** for the
-  predict step. The harness auto-detects `../RLSuccSite/.venv` if present,
-  else falls back to the local `.venv`. See
-  [docs/architecture.md](docs/architecture.md#design-decisions) for the
-  rationale.
+- **uv** ≥ 0.4 — [install](https://docs.astral.sh/uv/getting-started/installation/)
+- **Modal account** — `modal setup` after `uv sync`
+- **Python 3.11** — auto-installed by `uv` via `.python-version` if not present
+
+All Python dependencies (torch, torchrl, tensordict, protlearn, modal, etc.)
+are installed by `uv sync` — no separate venv setup needed.
 
 The model weights are bundled in `models/rlsuccsite/`. No sibling RLSuccSite
 repo is required.

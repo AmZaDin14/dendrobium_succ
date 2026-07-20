@@ -12,7 +12,9 @@ build/
 
 # uv / venv
 .venv/
-uv.lock
+
+# devenv
+.devenv/
 
 # IDE
 .vscode/
@@ -23,6 +25,7 @@ uv.lock
 # Data (keep directory structure, ignore large files)
 data/input/*
 data/processed/*
+data/genomes/*
 !data/input/.gitkeep
 !data/processed/.gitkeep
 

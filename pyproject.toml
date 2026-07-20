@@ -12,7 +12,13 @@ dependencies = [
     "rich>=13.0",
     "scikit-learn>=1.3",
     "matplotlib>=3.7",
-    "numpy>=1.24",
+    "numpy>=1.24,<2",
+    # Predict engine (RLSuccSite subprocess) — pinned to match bundled models
+    "torch>=2.1,<2.2",
+    "torchrl>=0.2,<0.3",
+    "tensordict>=0.2,<0.3",
+    "protlearn>=0.0.3",
+    "setuptools>=68.0,<72",
 ]
 
 [project.scripts]

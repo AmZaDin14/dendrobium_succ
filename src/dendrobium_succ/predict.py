@@ -1,9 +1,11 @@
 """Wrapper to run RLSuccSite's Models/Predict.py as a subprocess.
 
-RLSuccSite's Predict.py is a self-contained CPU inference script with its
-own virtual environment (torch, torchrl, tensordict, protlearn, etc.).
-Rather than reimplementing the ensemble logic, we call it directly via
-RLSuccSite's .venv Python.
+RLSuccSite's Predict.py is a self-contained CPU inference script that
+uses torch, torchrl, tensordict, and protlearn. All these deps are
+installed in the same `.venv` as the harness via `uv sync` (see
+pyproject.toml). We call Predict.py as a subprocess using the current
+Python interpreter so its relative imports (Feature.*, Models.*) work
+correctly.
 
 Predict.py CLI:
     --prott5_features_pt  .pt dict with 'ids' + 'features' [N,1024]
@@ -16,19 +18,16 @@ Output CSV columns: SequenceID, Sequence, PositiveProbability, PredictedLabel
 """
 
 import subprocess
+import sys
 from pathlib import Path
 
 from .logging_config import get_logger
 
 logger = get_logger(__name__)
 
-# Local models directory (self-contained)
+# Local models directory (self-contained, ships with the repo)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LOCAL_MODELS_DIR = _PROJECT_ROOT / "models" / "rlsuccsite"
-
-# Fallback: sibling RLSuccSite directory
-RLSUCCSITE_DIR = _PROJECT_ROOT.parent / "RLSuccSite"
-RLSUCCSITE_PYTHON = RLSUCCSITE_DIR / ".venv" / "bin" / "python"
 
 
 def run_predict(
@@ -40,6 +39,9 @@ def run_predict(
     batch_size: int = 2048,
 ) -> Path:
     """Run RLSuccSite ensemble prediction (ProtT5 + TPEMPPS_CCP).
+
+    Uses the current Python interpreter (sys.executable), which has all
+    predict deps installed via ``uv sync``.
 
     Args:
         prott5_pt: Path to the ProtT5 features .pt file.
@@ -62,36 +64,13 @@ def run_predict(
     elif LOCAL_MODELS_DIR.exists() and (LOCAL_MODELS_DIR / "Models" / "Predict.py").exists():
         base = LOCAL_MODELS_DIR
         logger.info(f"Using local RLSuccSite models: {base}")
-    elif RLSUCCSITE_DIR.exists():
-        base = RLSUCCSITE_DIR
-        logger.info(f"Using sibling RLSuccSite directory: {base}")
     else:
         raise FileNotFoundError(
-            f"RLSuccSite not found. Expected at:\n"
-            f"  - Local: {LOCAL_MODELS_DIR}\n"
-            f"  - Sibling: {RLSUCCSITE_DIR}\n"
-            f"Set --rlsuccsite-dir or copy models to models/rlsuccsite/"
-        )
-
-    # Find Python interpreter
-    # Prefer sibling RLSuccSite venv (has all dependencies) over local venv
-    sibling_python = RLSUCCSITE_DIR / ".venv" / "bin" / "python"
-    local_python = _PROJECT_ROOT / ".venv" / "bin" / "python"
-    
-    if sibling_python.exists():
-        python = sibling_python
-    elif local_python.exists():
-        python = local_python
-    else:
-        raise FileNotFoundError(
-            f"Python interpreter not found. Expected at:\n"
-            f"  - Sibling: {sibling_python}\n"
-            f"  - Local: {local_python}\n"
-            f"Run 'uv sync' in RLSuccSite or this project to create a venv."
+            f"RLSuccSite not found at {LOCAL_MODELS_DIR}.\n"
+            f"Re-clone the repo or pass --rlsuccsite-dir."
         )
 
     predict_py = base / "Models" / "Predict.py"
-
     if not predict_py.exists():
         raise FileNotFoundError(f"Predict.py not found: {predict_py}")
 
@@ -100,6 +79,9 @@ def run_predict(
             raise FileNotFoundError(f"{label} not found: {p}")
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    # Use the current Python interpreter — all predict deps are available
+    python = sys.executable
 
     cmd = [
         str(python), str(predict_py),
@@ -111,9 +93,10 @@ def run_predict(
     ]
 
     logger.info("Running RLSuccSite ensemble prediction...")
-    logger.info(f"  ProtT5:   {prott5_pt}")
-    logger.info(f"  Fragments: {fragments_fasta}")
-    logger.info(f"  Output:   {output_csv}")
+    logger.info(f"  Interpreter: {python}")
+    logger.info(f"  ProtT5:      {prott5_pt}")
+    logger.info(f"  Fragments:   {fragments_fasta}")
+    logger.info(f"  Output:      {output_csv}")
     logger.debug(f"$ {' '.join(cmd)}")
 
     # Run from RLSuccSite dir so its relative imports (Feature.*, Models.*) work
